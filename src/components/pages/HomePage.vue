@@ -13,11 +13,12 @@ import { Options, Vue } from "vue-class-component";
   methods: {
     newMatch() {
       this.matchList.push({id: this.matchList.length, match: new Match()});
-    },
+    }
   },
   data() {
     return {
       matchList: [{id: 0, match: new Match()}],
+      isOpenSCoreDialog: false,
     };
   },
 })
@@ -29,9 +30,7 @@ export default class HomePage extends Vue {}
     <h1>Simulateur de Match de Tennis</h1>
     <AppButton label="Nouveau Match" :onClick="newMatch" />
   </div>
-  <template v-for="item in this.matchList" v-bind:key="item.id">
-      <MatchBox :match="item.match"/>
-  </template>
+  <MatchBox :match="item.match" v-for="item in this.matchList" v-bind:key="item.id"/>
 </template>
 
 

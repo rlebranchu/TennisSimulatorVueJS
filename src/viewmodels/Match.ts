@@ -1,5 +1,5 @@
 import Player from './Player';
-import { ErrorMessage, isPointNormalType, MatchScore, Point } from './Types';
+import { ErrorMessage, isPointNormal, isPointTieBreak, MatchScore, Point, PointTieBreak } from './Types';
 import { AVANTAGEVALUE, MAXPOINTINGAME, NBMAXGAMEFORWINSET, NBMINGAMEFORWINSET, ORDREPOINT, WINGAMEVALUE } from './Constantes';
 
 export default class Match {
@@ -98,9 +98,9 @@ export default class Match {
 
     // public only for jest
     public comparePointTieBreak(playerWinner: Player, playerLoser: Player): void {
-        let playerWinnerPoint: Point = playerWinner.gamePoint; // A null : si a la fin c'est NULL -> c'est que j'ai gagné le jeu
+        let playerWinnerPoint: Point = playerWinner.gamePoint;
         const playerLoserPoint: Point = playerLoser.gamePoint;
-        if (!isPointNormalType(playerWinnerPoint) && !isPointNormalType(playerLoserPoint)) { // On vérifie que les points actuels sont bien des entiers : sinon erreur
+        if (isPointTieBreak(playerWinnerPoint) && isPointTieBreak(playerLoserPoint)) { // On vérifie que les points actuels sont bien des entiers : sinon erreur
             playerWinnerPoint++;
             // Si le score du joueur ayant gagné le point atteint au minimum 7 et qu'il a deux points d'écarts
             if (playerWinnerPoint >= 7 && playerWinnerPoint >= playerLoserPoint + 2)
@@ -184,7 +184,7 @@ export default class Match {
         const maxScorePlayerTwo = Math.max(...matchScore.playerTwoScore);
         const minScorePlayerTwo = Math.min(...matchScore.playerTwoScore);
         if(maxScorePlayerOne > 7 || maxScorePlayerTwo > 7|| minScorePlayerOne < 0 || minScorePlayerTwo <0)
-            return {code: 1, message: "Les scores attribuer nes ont pas bons : avoir des jeux entre 0 et 7"};
+            return {code: 1, message: "Les scores attribués ne sont pas bons : avoir des jeux entre 0 et 7"};
 
         let currentSet = 0;
         this.getCurrentWinner(matchScore, playerWinnerOnSet, playerLoserOnSet, currentSet);
@@ -194,13 +194,13 @@ export default class Match {
         if (!setFinished) {
             if (matchScore.playerOneScore[currentSet+1] != 0 || matchScore.playerTwoScore[currentSet+1] != 0 || // Second set commencé
                 matchScore.playerOneScore[currentSet+2] != 0 || matchScore.playerTwoScore[currentSet+2] != 0 ) { // Troisième set commencé
-                return {code: 2, message: "Le second set commence sans que le premier ne soit terminé !"};
+                return {code: 2, message: "Le second (ou le troisième) set commence sans que le premier ne soit terminé !"};
             }
         } else { // Sinon on regarde si le deuxième set est terminé
             currentSet = 1;
             this.getCurrentWinner(matchScore, playerWinnerOnSet, playerLoserOnSet, currentSet);
             setFinished = this.isSetWon(playerWinnerOnSet.score[currentSet], playerLoserOnSet.score[currentSet]);
-            // Si le premier set n'est pas terminé : on regarde si le troisième set est commencé
+            // Si le second set n'est pas terminé : on regarde si le troisième set est commencé
             if (!setFinished) {
                 if (matchScore.playerOneScore[currentSet+1] != 0 || matchScore.playerTwoScore[currentSet+1] != 0) { // Troisième set commencé
                     return {code: 3, message: "Le troisieme set commence sans que le second ne soit terminé !" };
@@ -221,9 +221,23 @@ export default class Match {
             return {code: 4, message: "Les deux joueurs ne peuvent pas être l'avantage"};
         //Point de Tie-Break
         if((matchScore.playerOnePoint == AVANTAGEVALUE || matchScore.playerTwoPoint == AVANTAGEVALUE) &&
-            matchScore.playerOneScore[currentSet] ==6 && matchScore.playerTwoScore[currentSet] == 6
+            matchScore.playerOneScore[currentSet] == 6 && matchScore.playerTwoScore[currentSet] == 6
         )
             return {code: 5, message: "Impossible d'avoir un avantage dans un jeu de tie-break"};
+        // Avantage avec autre Joueur pas à 40
+        if([matchScore.playerOnePoint, matchScore.playerTwoPoint].includes(AVANTAGEVALUE) && ![matchScore.playerOnePoint, matchScore.playerTwoPoint].includes(MAXPOINTINGAME))
+            return {code: 6, message: "Si l'un joueur à l'avantage, l'autre doit avoir 40 points"};
+        // Si on est pas dans un tie-break, ne pouvoir avoir que des points de Type PointNormaux
+        if(!(isPointNormal(matchScore.playerOnePoint) && isPointNormal(matchScore.playerTwoPoint)) &&
+            !(matchScore.playerOneScore[currentSet] == 6 && matchScore.playerTwoScore[currentSet] == 6)
+        )
+            return {code: 7, message: "L'un des joueurs a des points imprévus dans un jeu normal"};
+        // Si on est dans un tie-break, les points ne doivent pas avoir deux points d'écart : si l'un des joueurs a plus (ou égale à 7 points)
+        if(matchScore.playerOneScore[currentSet] == 6 && matchScore.playerTwoScore[currentSet] == 6 &&
+            Math.max((matchScore.playerOnePoint as PointTieBreak),(matchScore.playerTwoPoint as PointTieBreak)) >= 7 &&
+            Math.abs((matchScore.playerOnePoint as PointTieBreak) - (matchScore.playerTwoPoint as PointTieBreak)) > 1
+        )
+            return {code: 8, message: "Dans un tie-break, les points ne peuvent pas avoir plus d'un point d'écart"};
 
         // Si nous arrivons jusqu'ici, c'est que les vérifications sont bonnes
         // On compte le nombre de set gagnés par chacun
@@ -237,6 +251,14 @@ export default class Match {
                 nbSetWinTwo++;
             }
         }
+
+        // Si quelqu'un a deux sets sur les deux premiers set, le troisième set ne doit pas être commencé
+        if(nbSetWinOne == 2 || nbSetWinTwo ==2){
+            matchFinished = true;
+            if((matchScore.playerOnePoint != 0 || matchScore.playerTwoPoint != 0 ))
+                return {code: 9, message: "Un joueur a gagné les deux premiers sets : le troisième set doit être vide"};
+        }
+
         // Nous pouvons donc affectés ce nouveau score à celui du match
         this._currentSet = currentSet;
         this._isFinished = matchFinished;

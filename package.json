@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "core-js": "^3.8.3",
+    "gitart-vue-dialog": "^2.0.3",
     "vue": "^3.2.13",
     "vue-class-component": "^8.0.0-0",
     "vue-grid-responsive": "^1.3.0"
@@ -29,7 +30,6 @@
     "babel-jest": "^27.0.6",
     "eslint": "^7.32.0",
     "eslint-plugin-vue": "^8.0.3",
-    "jest": "^27.0.5",
     "ts-jest": "^27.0.4",
     "typescript": "~4.5.5",
     "vue-cli-plugin-vuetify": "~2.4.7"
