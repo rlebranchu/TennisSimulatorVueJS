@@ -5,7 +5,7 @@
 Le but de ce projet est de découvrir le framework VueJs en utilisant le code du dépot TennisSimulator.
 L'objectif est d'avoir une interface permettant de visualiser plusieurs matchs en même.
 
-<img src="https://user-images.githubusercontent.com/38243794/158570045-36bb85e0-fac9-4042-b805-c5e19ae21bee.png" width="5500px"/>
+<img src="https://user-images.githubusercontent.com/38243794/159355977-01baa8a8-93a4-48b6-ba26-2cb3856ab930.png" width="5500px"/>
 
 ## Pourquoi le langage VueJS :
 Je suis actuellement en train d'apprendre de nouvelles technologies web et mobiles.
@@ -21,8 +21,6 @@ Pour l'instant, il ne reprend pas toutes les fonctions disponibles par le dépô
   - Lancer un nouveau match
   - Jouer un point aléatoire
   - Saisir le nombre de point aléatoires à lancer
-
-## Fonctionnalités en attente :
   - Faire gagner le prochain point par le Joueur 1
   - Faire gagner le prochain point par le Joueur 2
   - Mettre à jour le score au match
